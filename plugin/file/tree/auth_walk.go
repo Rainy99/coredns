@@ -10,7 +10,7 @@ func (t *Tree) AuthWalk(fn func(e *Elem, rrs map[uint16][]dns.RR) error) error {
 	if t.Root == nil {
 		return nil
 	}
-	_, err := t.Root.authwalk(make(map[string]struct{}), fn)
+	_, err := t.Root.authwalk(fn)
 	return err
 }
 
@@ -22,7 +22,7 @@ const (
 	terminate
 )
 
-func (n *Node) authwalk(delegated map[string]struct{}, fn func(e *Elem, rrs map[uint16][]dns.RR) error) (status, error) {
+func (n *Node) authwalk(fn func(e *Elem, rrs map[uint16][]dns.RR) error) (status, error) {
 	if n.Elem.Type(dns.TypeNS) != nil {
 		return skipChildren, nil
 	}
@@ -32,7 +32,7 @@ func (n *Node) authwalk(delegated map[string]struct{}, fn func(e *Elem, rrs map[
 	}
 
 	if n.Left != nil {
-		stat, err := n.Left.authwalk(delegated, fn)
+		stat, err := n.Left.authwalk(fn)
 		if err != nil {
 			return terminate, err
 		}
@@ -42,7 +42,7 @@ func (n *Node) authwalk(delegated map[string]struct{}, fn func(e *Elem, rrs map[
 	}
 
 	if n.Right != nil {
-		stat, err := n.Right.authwalk(delegated, fn)
+		stat, err := n.Right.authwalk(fn)
 		if err != nil {
 			return terminate, err
 		}
