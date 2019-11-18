@@ -93,7 +93,7 @@ func (s *Signer) Sign(now time.Time) (*file.Zone, error) {
 
 	// We are walking the tree in the same direction, so names[] can be used here to indicated the next element.
 	i := 1
-	err = z.Walk(func(e *tree.Elem, zrrs map[uint16][]dns.RR) error {
+	err = z.AuthWalk(func(e *tree.Elem, zrrs map[uint16][]dns.RR) error {
 		if !apex && e.Name() == s.origin {
 			nsec := NSEC(e.Name(), names[(ln+i)%ln], s.ttl, append(e.Types(), dns.TypeNS, dns.TypeSOA, dns.TypeNSEC, dns.TypeRRSIG))
 			z.Insert(nsec)

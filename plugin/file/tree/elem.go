@@ -98,4 +98,4 @@ func (e *Elem) Delete(rr dns.RR) {
 }
 
 // Less is a tree helper function that calls less.
-func Less(a *Elem, name string) int { return less(name, a.Name()) }
+func Less(a *Elem, name string) int { return less(a.Name(), name) }

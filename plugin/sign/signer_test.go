@@ -100,3 +100,46 @@ $ORIGIN example.org.
 		}
 	}
 }
+
+func TestSignGlue(t *testing.T) {
+	input := `sign testdata/db.miek.nl miek.nl {
+               key file testdata/Kmiek.nl.+013+59725
+               directory testdata
+       }`
+	c := caddy.NewTestController("dns", input)
+	sign, err := parse(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sign.signers) != 1 {
+		t.Fatalf("Expected 1 signer, got %d", len(sign.signers))
+	}
+	z, err := sign.signers[0].Sign(time.Now().UTC())
+	if err != nil {
+		t.Error(err)
+	}
+
+	// non delegated name, should be signed
+	name := "ns3.blaaat.miek.nl."
+	ns3, _ := z.Search(name)
+	sig := ns3.Type(dns.TypeRRSIG)
+	if len(sig) != 2 {
+		t.Errorf("Expected 2 RRSIGs (NSEC/AAAA) for %s, got %d", name, len(sig))
+	}
+
+	// glue needed for delegation, should not be signed
+	name = "ns2.bla.miek.nl."
+	ns2, _ := z.Search(name)
+	sig = ns2.Type(dns.TypeRRSIG)
+	if len(sig) != 0 {
+		t.Errorf("Expected 0 RRSIGs for %s, got %d", name, len(sig))
+	}
+
+	// nameserver records, should not be signed
+	name = "bla.miek.nl."
+	bla, _ := z.Search(name)
+	sig = bla.Type(dns.TypeRRSIG)
+	if len(sig) != 0 {
+		t.Errorf("Expected 0 RRSIGs for %s, got %d", name, len(sig))
+	}
+}
